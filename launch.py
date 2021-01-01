@@ -41,7 +41,7 @@ st.set_page_config(page_title='Analytics',
                         initial_sidebar_state='expanded')
 
 container = st.sidebar.beta_container()
-initial_options = container.selectbox("Pages",["Load(Connect) Data","Analysis/Reporting Data","ML Modeling","Simulation"])
+initial_options = container.selectbox("Pages",["Load(Connect) Data","Analysis/Reporting Data"])#,"ML Modeling","Simulation"])
 if initial_options == 'Load(Connect) Data':
     data = ds.run(st, mongoSession, session_id)
 elif initial_options == 'Analysis/Reporting Data':
