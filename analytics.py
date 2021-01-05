@@ -11,9 +11,48 @@ import os
 from streamlit_pandas_profiling import st_profile_report
 
 def run(st,data):
-    expander = st.beta_expander("Menu")
+    expander = st.beta_expander("Menu",expanded=True)
     with expander:
         ana_choice = st.radio("Analysis",["Data","Visualization","Statistics","Data Profiling"])
+        filters = st.checkbox('Add Filters')
+        if filters:
+            st.info("Select column and values from below")
+            filtered_cols = st.multiselect("Select columns to filter",data.columns.tolist())
+            filtered_sets = []
+            if len(filtered_cols)>0:
+                iterations = len(filtered_cols) // 3
+                difference = len(filtered_cols) % 3
+                jack = 0
+
+                while jack < iterations:
+                    cols_filtered = []
+                    try:
+                        cols_filtered = cols_filtered + st.beta_columns(3)
+                    except:
+                        pass
+                    counter = 0
+                    for i in range(jack*3, 3*jack+3):
+                        filtered_sets.append(cols_filtered[counter].multiselect(filtered_cols[i], data[filtered_cols[i]].unique().tolist()))
+                        counter+=1
+                    jack+=1
+                if difference == 0:
+                    pass
+                else:
+                    cols_filtered = []
+                    cols_filtered = cols_filtered + st.beta_columns(difference)
+                    counter = 0
+                    for i in range(iterations*3, iterations*3+difference):
+                        filtered_sets.append(cols_filtered[counter].multiselect(filtered_cols[i], data[filtered_cols[i]].unique().tolist()))
+                        counter += 1
+
+            #Now filtering the data
+            tracker = 0
+            for filter_value in filtered_sets:
+                if len(filter_value)>0:
+                    data = data[data[filtered_cols[tracker]].isin(filter_value)]
+                tracker+=1
+
+
         if ana_choice == 'Data':
             data_options = st.selectbox("",["View Records","Data Correlation","Pivot"])
             if data_options == "View Records":
@@ -21,17 +60,17 @@ def run(st,data):
                 top_bottom_options = c1.radio("Records",["Top","Bottom"])
                 num_rec = c2.number_input("No. of Records:", min_value=0, max_value=100, step=1, value=10)
                 if top_bottom_options == 'Top':
-                    st.table(data.head(num_rec))
+                    st.dataframe(data.head(num_rec))
                 else:
-                    st.table(data.tail(num_rec))
+                    st.dataframe(data.tail(num_rec))
             elif data_options == "Data Correlation":
                 select_columns = st.multiselect("Select Columns",data.columns.tolist())
                 corr_view = st.radio("Correlation View",["Table","Chart"])
                 if corr_view == 'Table':
                     if len(select_columns)==0:
-                        st.table(data.corr())
+                        st.dataframe(data.corr())
                     else:
-                        st.table(data[select_columns].corr())
+                        st.dataframe(data[select_columns].corr())
                 else:
                     if len(select_columns) == 0:
                         st.write(sns.heatmap(data.corr(), annot=True))
@@ -56,7 +95,7 @@ def run(st,data):
                         elif aggregation_operations == 'count':
                             operation = np.count_nonzero
                         pivot_table = pd.pivot_table(data,values=numeric_cols,index=measures,columns=dimensions,aggfunc=operation)
-                        st.table(pivot_table)
+                        st.dataframe(pivot_table)
         elif ana_choice == "Visualization":
             chart_options = st.selectbox('Charts',['Bar','Line','Heatmap','Distplot','Customized'])
             if chart_options == 'Bar':
@@ -64,6 +103,8 @@ def run(st,data):
                 y_col = st.selectbox('Y', data.columns.tolist())
                 hue_color = st.checkbox("Add color column")
                 direction = st.radio('chart direction',['vertical','horizontal'])
+                if hue_color:
+                    hue_col = st.selectbox('hue', data.columns.tolist())
                 button = st.button("Execute!!!")
                 if button:
                     if direction == 'vertical':
@@ -71,7 +112,6 @@ def run(st,data):
                     else:
                         chart_direction = 'h'
                     if hue_color:
-                        hue_col = st.selectbox('hue', data.columns.tolist())
                         if hue_col:
                             st.write(sns.barplot(x=x_col, y=y_col, hue=hue_col, data=data,orient=chart_direction))
                             st.pyplot()
@@ -79,7 +119,7 @@ def run(st,data):
                             st.write(sns.barplot(x=x_col, y=y_col, data=data,orient=chart_direction))
                             st.pyplot()
                     else:
-                        st.write(sns.barplot(x=x_col, y=y_col, data=data,orient=chart_direction))
+                        st.write(sns.barplot(x=x_col, y=y_col, data=data, orient=chart_direction))
                         st.pyplot()
             elif chart_options == 'Line':
                 x_col = st.selectbox('X', data.columns.tolist())
@@ -146,7 +186,7 @@ def run(st,data):
                 mode = st.radio('Value Counts',['Table','Chart'])
                 if mode == 'Table':
                     value_counts = statistics.__get__stats__(select_columns)
-                    st.table(value_counts)
+                    st.dataframe(value_counts)
                 else:
                     value_counts = statistics.__get__stats__(select_columns)
                     st.write(value_counts[:20].plot(kind='barh'))

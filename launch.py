@@ -41,7 +41,7 @@ st.set_page_config(page_title='Analytics',
                         initial_sidebar_state='expanded')
 
 container = st.sidebar.beta_container()
-initial_options = container.selectbox("Pages",["Load(Connect) Data","Analysis/Reporting Data"])#,"ML Modeling","Simulation"])
+initial_options = container.selectbox("Pages",["Load(Connect) Data","Analysis/Reporting Data","ML Modeling","Simulation","AutoML"])#,"ML Modeling","Simulation"])
 if initial_options == 'Load(Connect) Data':
     data = ds.run(st, mongoSession, session_id)
 elif initial_options == 'Analysis/Reporting Data':
@@ -49,8 +49,12 @@ elif initial_options == 'Analysis/Reporting Data':
         data = pd.DataFrame(mongoSession.get_session_info({'session_id':session_id+'_df'})["data_dict"])
         ana.run(st,data)
 elif initial_options == "ML Modeling":
-    if len(pd.DataFrame(mongoSession.get_session_info({'session_id': session_id + '_df'})["data_dict"])) > 0:
-        data = pd.DataFrame(mongoSession.get_session_info({'session_id': session_id + '_df'})["data_dict"])
-        ml.run(st, data)
+    #try:
+        if len(pd.DataFrame(mongoSession.get_session_info({'session_id': session_id + '_df'})["data_dict"])) > 0:
+            data = pd.DataFrame(mongoSession.get_session_info({'session_id': session_id + '_df'})["data_dict"])
+            ml.run(st, data,mongoSession,session_id)
+    #except:
+        #st.error("No Data source is available!!!")
+        #st.info("Please connect and load data before running model!")
 elif initial_options == 'Simulations':
     pass

@@ -21,7 +21,6 @@ def run(st, mongocls,session_id):
     st.text("Connect")
     container = st.beta_container()
     ds_selection = container.selectbox("Data Sources", ['csv', 'txt', 'mysql', 'sql', 'parquet','folder'])
-
     if ds_selection == 'csv' or ds_selection == 'txt':
         upload_path = st.file_uploader('Upload Dataset', type=["csv", "txt"])
         sub_container = st.beta_container()
@@ -49,12 +48,12 @@ def run(st, mongocls,session_id):
             else:
                 if kwargs is None:
                     data = load_data(path=upload_path, ds_type=ds_selection, header=header, sep=separator)
-                    mongocls.delete_session({'session_id':session_id+'_df'})
-                    mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
+                    #mongocls.delete_session({'session_id':session_id+'_df'})
+                    #mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
                 else:
                     data = load_data(path=upload_path, ds_type=ds_selection, header=header, sep=separator)
-                    mongocls.delete_session({'session_id':session_id+'_df'})
-                    mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
+                    #mongocls.delete_session({'session_id':session_id+'_df'})
+                    #mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
     elif ds_selection == 'parquet':
         upload_path = st.file_uploader('Upload Dataset', type=["parquet"])
         connect_btn = st.button("Execute Query !!!")
@@ -63,8 +62,8 @@ def run(st, mongocls,session_id):
                 st.warning("Select upload file!!!")
             else:
                 data = load_data(path=upload_path, ds_type=ds_selection)
-                mongocls.delete_session({'session_id':session_id+'_df'})
-                mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
+                #mongocls.delete_session({'session_id':session_id+'_df'})
+                #mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
     elif ds_selection == 'mysql':
         sub_container = st.beta_container()
         host = sub_container.text_input("Enter Host:", value='localhost')
@@ -96,13 +95,15 @@ def run(st, mongocls,session_id):
                                           **{'mode': mode, 'class': mysql_cls, 'query': query})
                     # data = mysql_cls.get_data_from_RDS(query)
                     st.success('Query executed successfully!!!')
-                mongocls.delete_session({'session_id':session_id+'_df'})
-                mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
+                #mongocls.delete_session({'session_id':session_id+'_df'})
+                #mongocls.write_session_info({'session_id':session_id+'_df','data_dict':data.to_dict("records")})
         else:
             st.warning("Select a Database!!!")
 
     if data is not None:
         st.text('Data Loaded')
+        mongocls.delete_session({'session_id': session_id + '_df'})
+        mongocls.write_session_info({'session_id': session_id + '_df', 'data_dict': data.to_dict("records")})
         st.write(data.head())
         #session.write_state_df(data, engine, session_id + '_df')
         return data
