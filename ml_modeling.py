@@ -178,7 +178,6 @@ def run(st,data,mongocls,session_id):
             if metrics_btn:
                 for model,metrics in metric_selected.items():
                     for metric in metrics:
-                        pdb.set_trace()
                         metric_cls.select_metrics(metric)
                         st.write(metric)
                         st.write(metric_cls.metrics_solve(estimator=models_trained[model], test_x=test_x))
